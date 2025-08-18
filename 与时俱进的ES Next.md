@@ -1,256 +1,177 @@
-# 与时俱进的ES Next
+# 与时俱进的 ES Next
 
-## 数组API
+## 1. 数组 API
 
 ### Array.prototype.includes(value: any): Boolean
 
-```javascript
-[1,2,3].includes(3) // true
+```
+[1, 2, 3].includes(3) // true
 ```
 
-> 判断数组中是否含有某一个元素，返回一个布尔值；
+- 判断数组中是否包含某元素，返回布尔值
+- **其他判断元素的 API：**
 
-​		其他数组判断元素的api
+```
+[1, 2, 3].findIndex(i => i == 2) // 1
+[1, 2, 3].find(i => i == 2)      // 2
+[1, 2, 3].indexOf(2)             // 1
+```
 
- 		[1, 2, 3].findIndex(*i* => *i* == 2) *// 2*
+### 相等算法比较：indexOf VS includes
 
-​		[1, 2, 3].find(*i* => *i* == 2) *// 2*
+| 方法     | 比较算法        | 特点                          |
+| -------- | --------------- | ----------------------------- |
+| indexOf  | `===`           | `[NaN].indexOf(NaN) // -1`    |
+| includes | `SameValueZero` | `[NaN].includes(NaN) // true` |
 
-​		[1, 2, 3].indexOf(2) *// 1*
+- `SameValueZero` 与 `===` 的区别：
 
-
-
-### 相等算法比较
-
-#### 案例：indexOf VS includes
-
-- ##### index
-
-  > 采用的是===比较
-
-  ```javascript
-  [NaN].indexOf(NaN) // -1
   ```
-
-- ##### includes
-
-  > 采用SameValueZero()；
-  >
-  > 引擎内部的比较方式，没有对外接口；
-  >
-  > 实现方式采用了Map和Set。
-
-  ```javascript
-  [NaN].includes(NaN) // true
-  ```
-
-  ```javascript
   const set = new Set().add(0).add(NaN)
-  set.has(-0) // false
+  set.has(-0) // true
   set.has(NaN) // true
   ```
 
+------
 
-
-
-## 对象
+## 2. 对象
 
 ### Object Spread（对象展开语法）
 
-```javascript
+```
 const a = { name: 'js' }
-const b = {age: 20}
-const c = {...a, ...b}
-console.log(c)
-
-// { name: 'js', age: 20 }
+const b = { age: 20 }
+const c = { ...a, ...b }
+console.log(c) // { name: 'js', age: 20 }
 ```
 
-> 「object spread」：{... obj}等价于Object.assign（{}，obj）。
+> ```
+> {...obj}` 等价于 `Object.assign({}, obj)
+> ```
 
 ### Object Spread VS Object.assign()
 
-- #### Object.assign()
+- Object.assign 会触发 setter，并会修改目标对象：
 
-  > Object.assign()修改了一个对象，因此它可以触发 ES6 setter；
-  >
-  > 使用时要保证始终将空对象{}作为第一个参数传递。
-
-  ```javascript
-  const a = { name: 'js' }
-  const b = {age: 20}
-  const c = Object.assign({}, a, b)
-  console.log(c)
-  
-  // { name: 'js', age: 20 }
-  ```
-
-  
-
-## 箭头函数
-
-### 哪些场景下不适合使用ES6箭头函数
-
-- #### 构造函数的原型方法上
-
-  > 构造函数的原型方法需要通过this获得实例，箭头函数没有this。
-
-  ```javascript
-  // 错误语法
-  Person.prototype = () => {...}
-  ```
-
-- #### 需要获取arguments时
-
-  > 箭头函数不具有arguments，无法在函数体内访问这一特殊的伪数组。
-
-- #### 使用对象方法时
-
-  ```javascript
-  const person = {
-    name: 'zhangsan',
-    getName: () => {
-  		console.log(this.name)
-    }
-  }
-  person.getName()
-  
-  // undefined
-  ```
-
-  > 上述例子中，getName函数内的this指向window，不符合其用意。
-
-- #### 使用动态回调时
-
-  ```javascript
-  const btn = document.getElementById('btn')
-  btn.addEventListener('click', () => {
-    console.log(this === window)
-  })
-  
-  // true
-  ```
-
-  > 当触发按钮事件时，会输出true，
-  >
-  > 事件绑定的函数this指向了window，无法获取该事件对象。
-
-
-
-## Proxy代理
-
-- ### 对象实例化（new关键字）
-
-```javascript
-class Person {
-  constructor(name) {
-    this.name = name
-  }
-}
+```
+const a = { name: 'js' }
+const b = { age: 20 }
+const c = Object.assign({}, a, b)
+console.log(c) // { name: 'js', age: 20 }
 ```
 
-```javascript
+> 推荐始终以空对象 `{}` 作为第一个参数，避免修改原对象
+
+------
+
+## 3. 箭头函数
+
+### 不适合使用的场景
+
+1. **构造函数的原型方法**
+
+```
+// 错误
+Person.prototype = () => {...}
+```
+
+1. **需要 arguments 的场景**
+
+```
+const fn = () => console.log(arguments) // 不可用
+```
+
+1. **对象方法中**
+
+```
+const person = { 
+  name: 'zhangsan',
+  getName: () => console.log(this.name)
+}
+person.getName() // undefined
+```
+
+1. **动态回调**
+
+```
+btn.addEventListener('click', () => console.log(this === window)) // true
+```
+
+> 箭头函数没有独立 `this`，也没有 `arguments`，需要谨慎使用
+
+------
+
+## 4. Proxy 代理
+
+### 对类构造函数的代理
+
+```
+class Person { constructor(name){ this.name = name } }
+
 let proxyPersonClass = new Proxy(Person, {
-  apply(target, context, args) {
-    throw new Error(`error:Function ${target.name} cannot be invoked without 'new'`)
+  apply(target, context, args){
+    throw new Error(`Function ${target.name} cannot be invoked without 'new'`)
   }
 })
 
-proxyPersonClass('zhangsan') // Error: error:Function Person cannot be invoked without 'new'
-new proxyPersonClass(' zhangsan') // 正确
+proxyPersonClass('zhangsan')       // Error
+new proxyPersonClass('zhangsan')   // 正确
 ```
 
-> 对 Person 构造函数进行了代理，这样就可以防止非构造函数实例化的调用。
+- 强制非构造调用转为 `new`：
 
-```javascript
+```
 let proxyPersonClass = new Proxy(Person, {
-  apply(target, context, args) {
-    console.log(target)
+  apply(target, context, args){
     return new (target.bind(context, args))()
   }
 })
-
-proxyPersonClass('zhangsan') // 正确
-new proxyPersonClass(' zhangsan') // 正确
+proxyPersonClass('zhangsan')       // 正确
 ```
 
-> 默认处理非构造函数实例化的调用，将其强制转换为new调用；
->
-> 即使不使用new关键字，仍然可以得到new调用的实例。
+### assert 断言实现
 
-- ### assert断言的实现
-
-```javascript
-
+```
 const assert = new Proxy({}, {
-  set(target, warning, value) {
-    if (!value) {
-      throw new Error(`assert: '${warning}' is error`)
-    }
+  set(target, warning, value){
+    if (!value) throw new Error(`assert: '${warning}' is error`)
   }
 })
 const data = '1'
-assert['this is a number'] = typeof data === 'number'
-
+assert['this is a number'] = typeof data === 'number' 
 // Error: assert: 'this is a number' is error
 ```
 
-- ### Decorators装饰器
+### 装饰器（Decorators）及 autobind
 
-  ​	装饰器就是给类添加或修改类的属性和方法
+- 问题示例：
 
-  以autobind类库的实现为例，介绍decorator的使用。
-
-```javascript
-class Person {
-  constructor(name) {
-    this.name = name
-  }
-  getName() {
-    return this.name
-  }
-}
+```
 const person = new Person('zhangsan')
 const fn = person.getName
-fn()
-
-// TypeError: Cannot read property 'name' of undefined
+fn() // TypeError: Cannot read property 'name' of undefined
 ```
 
-> 执行fn()时，this已经指向window，因此无法找到name属性。
+- 使用 `@autobind` 自动绑定 `this`：
 
-使用autobind实现对this的绑定
-
-```javascript
+```
 class Person {
-  constructor(name) {
-    this.name = name
-  }
+  constructor(name){ this.name = name }
   @autobind
-  getName() {
-    return this.name
-  }
+  getName(){ return this.name }
 }
-const person = new Person('zhangsan')
-const fn = person.getName
-fn()
-
-// zhangsan
+const fn = new Person('zhangsan').getName
+fn() // zhangsan
 ```
 
-autobind的实现
+- autobind 实现原理：
 
-```javascript
-// target：目标对象，这里是作用的Person中的函数和属性
-// key：属性名称
-// descriptor：属性原本的描述符
-function autobind(target, key, { value: fn, configurable, enumerable }) {
+```
+function autobind(target, key, { value: fn, configurable, enumerable }){
   return {
     configurable,
     enumerable,
-    get() {
-      // 当使用get赋值时（const fn = person.getName）,
-      // 赋值结果通过const boundFn = fn.bind(this)进行this绑定，并返回绑定this后的结果
+    get(){
       const boundFn = fn.bind(this)
       Object.defineProperty(this, key, {
         configurable: true,
@@ -263,8 +184,8 @@ function autobind(target, key, { value: fn, configurable, enumerable }) {
     set: createDefaultSetter(key)
   }
 }
-function createDefaultSetter(key) {
-  return function set(newValue) {
+function createDefaultSetter(key){
+  return function set(newValue){
     Object.defineProperty(this, key, {
       configurable: true,
       writable: true,
@@ -276,3 +197,161 @@ function createDefaultSetter(key) {
 }
 ```
 
+# 5. ES Next 新特性实战总结
+
+## 5.1 可选链（Optional Chaining）`?.`
+
+**作用**
+
+- 安全访问对象深层属性或方法，避免 `TypeError: Cannot read property 'xxx' of undefined`
+
+**示例**
+
+```
+const obj = { a: { b: 2 } }
+console.log(obj?.a?.b)      // 2
+console.log(obj?.x?.b)      // undefined
+console.log(obj.a?.b?.c)    // undefined
+```
+
+- 结合函数调用：
+
+```
+const obj = { fn: () => 'ok' }
+console.log(obj.fn?.())      // 'ok'
+console.log(obj.noFn?.())    // undefined
+```
+
+------
+
+## 5.2 空值合并运算符（Nullish Coalescing）`??`
+
+**作用**
+
+- 区分 `null/undefined` 与其他假值（0、''、false）
+- 与逻辑 OR `||` 不同，`||` 会把所有假值替代，而 `??` 只替代 `null` 或 `undefined`
+
+**示例**
+
+```
+const foo = null ?? 'default'   // 'default'
+const bar = 0 ?? 42             // 0
+const baz = '' ?? 'hello'       // ''
+```
+
+------
+
+## 5.3 动态 import（Dynamic Import）
+
+**作用**
+
+- 按需加载模块，实现代码拆分（code-splitting）
+- 返回一个 Promise
+
+**示例**
+
+```
+// 按需加载模块
+const loadModule = async () => {
+  const { default: lodash } = await import('lodash')
+  console.log(lodash.random(1, 10))
+}
+loadModule()
+```
+
+- 可结合条件加载：
+
+```
+if (isDev) {
+  import('./dev-tools.js').then(module => module.init())
+}
+```
+
+------
+
+## 5.4 BigInt
+
+**作用**
+
+- 表示任意长度整数，解决 `Number.MAX_SAFE_INTEGER` 的精度问题
+
+**示例**
+
+```
+const a = 9007199254740991n
+const b = a + 10n
+console.log(b) // 9007199254741001n
+```
+
+- 注意：
+  - BigInt 不能与普通 Number 混合运算（需显式转换）
+
+------
+
+## 5.5 Promise.any & Promise.allSettled
+
+### Promise.any
+
+- 返回第一个成功的 Promise，如果全部失败，抛出 AggregateError
+
+```
+Promise.any([
+  Promise.reject('err1'),
+  Promise.resolve('ok2'),
+  Promise.resolve('ok3')
+]).then(console.log) // 'ok2'
+```
+
+### Promise.allSettled
+
+- 等待所有 Promise 完成（无论成功或失败），返回状态数组
+
+```
+Promise.allSettled([
+  Promise.resolve(1),
+  Promise.reject(2)
+]).then(console.log)
+/*
+[
+  { status: 'fulfilled', value: 1 },
+  { status: 'rejected', reason: 2 }
+]
+*/
+```
+
+------
+
+## 5.6 逻辑赋值运算符（Logical Assignment）
+
+- `||=`, `&&=`, `??=`
+
+```
+let a = null
+a ??= 10
+console.log(a) // 10
+
+let b = true
+b &&= false
+console.log(b) // false
+```
+
+- 简化常用逻辑操作和默认值赋值场景
+
+------
+
+## 5.7 String 和 Array 新方法
+
+### String
+
+```
+'hello'.at(-1)    // 'o'
+'  hi  '.trimStart() // 'hi  '
+'  hi  '.trimEnd()   // '  hi'
+```
+
+### Array
+
+```
+[1, 2, 3].at(-1)       // 3
+[1, 2, 3].flatMap(x => [x, x*2]) // [1,2,2,4,3,6]
+```
