@@ -32,7 +32,11 @@
   set.has(NaN) // true
   ```
 
-------
+### 总结
+
+- **SameValueZero 是比 `===` 更宽松的 “严格相等”**：仅在 `NaN` 场景下比 `===` 更友好（认为 `NaN === NaN`），其他场景与 `===` 完全一致。
+- **无需手动实现**：JavaScript 内置方法（`includes`、`Set.has`、`Map.has` 等）已默认使用 SameValueZero，直接使用这些方法即可满足大部分需求。
+- **关键记忆点**：看到 `Array.includes()` 或 `Set.has()` 时，要想到它们用的是 SameValueZero，能正确识别 `NaN`。
 
 ## 2. 对象
 
