@@ -88,3 +88,9 @@ Content-Security-Policy: default-src 'self'; script-src 'self' https://trusted.c
    - 每次请求生成唯一标识，只能使用一次
 3. **数字签名 / HMAC**
    - 对请求参数和时间戳签名，防止被篡改或重放
+
+### 5. SQL 注入
+
+**概念**
+
+在输入数据中插入恶意SQL代码，来控制或操纵应用程序与数据库之间的交互
