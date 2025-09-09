@@ -776,4 +776,11 @@ class CachedUserRepository {
 }
 ```
 
-这份面试题及答案涵盖了Flutter 3、GetX和Dio的核心概念和实际应用，包含了从基础到高级的各种场景。建议结合实际项目经验来理解和记忆这些知识点。
+### json_serializable
+
+1. **问题：** 你说你优化了Flutter的数据交互效率，用到了`json_serializable`。能说说为什么手动写`fromJson`/`toJson`效率不高，而代码生成的方式更好吗？这个过程是怎样的？
+   - **考察点：** 对序列化原理和工程化工具链的理解。
+   - **期望答案：**
+     - **原因：** 手动编写容易出错、繁琐且难以维护。Dart的反射（Mirrors）在Flutter中被禁用，因为它会导致包体积变大且性能不佳。
+     - **代码生成：** 通过注解（`@JsonSerializable`）标记模型类，`build_runner`工具在编译前预生成高效的、无反射的序列化代码（`.g.dart`文件）。这保证了运行时的性能和安全。
+     - **过程：** 在pubspec.yaml中添加依赖 -> 模型类添加注解 -> 运行 `flutter pub run build_runner build` 命令生成代码。
