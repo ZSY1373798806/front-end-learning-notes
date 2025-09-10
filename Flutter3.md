@@ -776,6 +776,19 @@ class CachedUserRepository {
 }
 ```
 
+
+
+
+
+
+
+**题目**：Flutter 中 JSON 序列化性能优化你是怎么做的？
+ **答案要点**：
+
+- 用 `json_annotation + build_runner` 自动生成序列化代码，避免反射。
+- 大量数据时，分批加载/懒加载。
+- 在 UI 层减少 `setState`，用 `GetX` 精细化更新。
+
 ### json_serializable
 
 1. **问题：** 你说你优化了Flutter的数据交互效率，用到了`json_serializable`。能说说为什么手动写`fromJson`/`toJson`效率不高，而代码生成的方式更好吗？这个过程是怎样的？
